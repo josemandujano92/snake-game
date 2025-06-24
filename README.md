@@ -2,6 +2,8 @@
 
 A classic Snake Game built in Java (using Eclipse and Microsoft Copilot). 
 
+<img src="https://github.com/josemandujano92/snake-game/blob/main/game_play.png?raw=true" width="500"/>
+
 ### Overview
 The player controls a snake which grows longer as it consumes food. \
 The game ends when the snake hits the boundaries or itself. 
@@ -11,7 +13,7 @@ The game ends when the snake hits the boundaries or itself.
 
 ### Setup
 -**Just Run the program:** \
-From Eclipse, right-click on SnakeGame.java and select Run As > Java Application. \
+From Eclipse, right-click on SnakeGame.java and select "Run As" > "1 Java Application". \
 The game will then start automatically. 
 
 ### How to Play
