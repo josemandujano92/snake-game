@@ -7,14 +7,15 @@ import java.util.Random;
 
 class SnakeGame extends JPanel implements ActionListener, KeyListener {
 	
-    // Game configuration
-    private final int WIDTH = 600;
-    private final int HEIGHT = 600;
-    private final int UNIT_SIZE = 30; // UNIT_SIZE = 20
+    // Game configuration (panel size, timer, etc.)
+    private final int WIDTH = 700;
+    private final int HEIGHT = 700;
+    private final int UNIT_SIZE = 35;
     private int subUnit = UNIT_SIZE / 5;
     private Timer timer;
-    private boolean running;
-    private boolean paused;
+    private int delay = 150;
+    private boolean welcomeScreen = true;
+    private boolean paused = false;
     private Font scoreFont = new Font("Monospaced", Font.BOLD, 25);
     private int score;
     
@@ -35,18 +36,15 @@ class SnakeGame extends JPanel implements ActionListener, KeyListener {
         setPreferredSize(new Dimension(WIDTH, HEIGHT));
         setBackground(Color.lightGray);
         setFocusable(true);
+        timer = new Timer(delay, this); // Timer delay determines game speed in milliseconds. 
         addKeyListener(this);
-        startGame();
+        initGame();
     }
     
-    private void startGame() {
-    	snake(45, 'R'); // Snake's starting conditions. (90, 'R')
-    	placeFood();
-    	running = true;
-    	paused = false;
+    private void initGame() {
     	score = 0;
-    	timer = new Timer(150, this); // Timer delay determines game speed in milliseconds. 
-        timer.start();
+    	snake(40, 'R'); // Snake's starting conditions. 
+    	placeFood();
     }
     
     // Initialize snake. 
@@ -80,17 +78,10 @@ class SnakeGame extends JPanel implements ActionListener, KeyListener {
     @Override
     public void keyPressed(KeyEvent e) {
     	
-    	if (running) {
+    	if (timer.isRunning()) {
     		
     		// If 'P' is pressed pause/resume the game. 
-    		if (e.getKeyCode() == KeyEvent.VK_P) {
-                paused = !paused;
-                if (paused) {
-                    timer.stop(); // Halt game loop updates. 
-                } else {
-                    timer.start(); // Resume game loop updates. 
-                }
-            }
+    		if (e.getKeyCode() == KeyEvent.VK_P) paused = !paused;
     		
     		// If the game is not paused, then update the snake's direction based on the arrow keys. 
     		if (!paused) {
@@ -109,10 +100,16 @@ class SnakeGame extends JPanel implements ActionListener, KeyListener {
     @Override
     public void keyReleased(KeyEvent e) {
     	
-    	// If the game is over, allow restarting with 'R'. 
-    	if (!running) {
+    	if (welcomeScreen) {
+			if (e.getKeyCode() == KeyEvent.VK_S) { // Welcome screen disappears and game starts. 
+				welcomeScreen = false;
+				timer.start();
+			}
+		} else if (!timer.isRunning()) { // If the game is over, allow restarting with 'R'. 
     		if (e.getKeyCode() == KeyEvent.VK_R) {
-                startGame();
+                initGame();
+                timer.setDelay(delay);
+                timer.restart(); // Resume game loop updates. 
             }
 		}
     	
@@ -175,7 +172,6 @@ class SnakeGame extends JPanel implements ActionListener, KeyListener {
         for (int i = 1; i < bodyParts; i++) {
             if (x[0] == x[i] && y[0] == y[i]) {
             	//System.out.println("self-collision");
-            	running = false;
             	timer.stop();
             	break;
             }
@@ -187,17 +183,14 @@ class SnakeGame extends JPanel implements ActionListener, KeyListener {
     @Override
     public void actionPerformed(ActionEvent e) {
     	
-        if (running && !paused) {
+        if (!paused) {
         	
             move();
             checkFood();
             checkSelfCollision();
             
-            // Check collision with wall. 
-            if (x[0] < 0 || x[0] >= WIDTH || y[0] < 0 || y[0] >= HEIGHT) {
-            	running = false;
-            	timer.stop();
-            }
+            // Check collisions with walls. 
+            if (x[0] < 0 || x[0] >= WIDTH || y[0] < 0 || y[0] >= HEIGHT) timer.stop();
             
         }
         
@@ -205,14 +198,40 @@ class SnakeGame extends JPanel implements ActionListener, KeyListener {
         
     }
     
+    // Rendering
     @Override
     protected void paintComponent(Graphics g) {
+    	
         super.paintComponent(g);
-        if (running) {
+        
+        if (welcomeScreen) {
+        	welcome(g);
+        } else if (timer.isRunning()) {
             draw(g);
 		} else {
             gameOver(g);
 		}
+        
+    }
+    
+    // Welcome screen with instructions. 
+    private void welcome(Graphics g) {
+    	
+    	g.setColor(Color.white);
+    	
+    	// Title
+        g.setFont(new Font("Monospaced", Font.BOLD, 50));
+        g.drawString("SNAKE GAME", WIDTH / 6, HEIGHT / 5);
+        
+        // Instructions
+        
+        g.setFont(new Font("Monospaced", Font.BOLD, 30));
+        g.drawString("use the arrow keys", WIDTH / 4, HEIGHT / 3 - 15);
+        g.drawString("to control the snake", WIDTH / 4, HEIGHT / 3 + 15);
+        
+        g.setFont(new Font("Monospaced", Font.BOLD, 20));
+        g.drawString("press (S) to start", WIDTH / 3, HEIGHT / 2);
+        
     }
     
     private void draw(Graphics g) {
@@ -287,13 +306,13 @@ class SnakeGame extends JPanel implements ActionListener, KeyListener {
         
         // Restart instruction
         g.setFont(new Font("Monospaced", Font.BOLD, 20));
-        g.drawString("Press (R) to Restart", WIDTH / 3, HEIGHT / 2);
+        g.drawString("press (R) to restart", WIDTH / 3, HEIGHT / 2);
         
     }
     
     // Main entry point: Create the window and start the game. 
     public static void main(String[] args) {
-        JFrame frame = new JFrame("-----SNAKE GAME-----   [Press (P) to Pause/Resume]");
+        JFrame frame = new JFrame("-----SNAKE GAME-----   [press (P) to pause/resume]");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.add(new SnakeGame());
         frame.pack();
